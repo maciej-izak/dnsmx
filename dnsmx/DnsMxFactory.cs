@@ -24,6 +24,7 @@ namespace DnsMx
 
         private Task? _domainsTasks;
         private Task? _mainTask;
+        private Task? _dataTask;
         private bool _disposed;
         private readonly LookupClient? _lookup;
         // processed domains are stored in special collection handled by dedicated thread, see dataTask in constructor
@@ -69,12 +70,12 @@ namespace DnsMx
             if (notifyDomainCompletion != null)
             {
                 _dataStorage = new BlockingCollection<DomainMx>(new ConcurrentBag<DomainMx>());
-                var dataTask = new Task(() =>
+                _dataTask = new Task(() =>
                 {
                     foreach (var dmx in _dataStorage.GetConsumingEnumerable(_cancellation.Token))
                         notifyDomainCompletion(dmx);
                 }, _cancellation.Token);
-                dataTask.Start();
+                _dataTask.Start();
             }
 
             // filter duplicates and process if needed (default)
@@ -223,6 +224,7 @@ namespace DnsMx
                     return;
                 await allIpResolve;
                 _dataStorage?.CompleteAdding();
+                _dataTask?.Wait();
             }
             catch (Exception e)
             {
