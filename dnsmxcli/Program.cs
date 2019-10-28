@@ -12,14 +12,15 @@ using DnsMx;
 
 namespace DnsMxCli
 {
-    class DnsMxCli
+    internal class DnsMxCli : IDisposable
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             Parser.Default.ParseArguments<Options>(args)
-                .WithParsed(opt => new DnsMxCli(opt));
+                .WithParsed(opt =>{using(new DnsMxCli(opt)){}});
         }
 
+        private bool _disposed;
         private readonly Options _options;
         private readonly DnsMxFactory _factory;
 
@@ -41,6 +42,21 @@ namespace DnsMxCli
             SaveResult();
         }
 
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        private void Dispose(bool disposing)
+        {
+            if (_disposed) return;
+            if (disposing) _factory.Dispose();
+            _disposed = true;
+        }
+
+        ~DnsMxCli() => Dispose(false);
+        
         /// <summary>
         /// Save result of application to file (only when CLI --output parameter was specified)
         /// </summary>
