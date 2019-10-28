@@ -202,7 +202,7 @@ namespace DnsMx
 
             foreach (var d in domains)
                 // filter duplicates
-                _domainsDict.GetOrAdd(d, domainsValFactory);
+                _domainsDict.GetOrAdd(d.ToLower(), domainsValFactory);
             if (Settings.Process)
                 _domainsTasks = WhenAllOrError(tasks);
             return count;
