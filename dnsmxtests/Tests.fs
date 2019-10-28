@@ -44,7 +44,8 @@ let ``Test DnsMX notify`` () =
 let ``Test improper dns`` () =
     let domains = ["gmail.com"]
     use f = new DnsMxFactory(domains, settings=FactorySettings(DnsIp="8.8.8.4"))
-    Assert.NotNull(f.Result.Error)
+    Assert.Null(f.Result.Error)
+    f.Result.Domains |> Seq.iter (fun d -> Assert.NotNull d.Error)
     
 [<Fact>]
 let ``Test invalid dns`` () =
@@ -54,10 +55,10 @@ let ``Test invalid dns`` () =
 
 [<Fact>]
 let ``Test Async cancel`` () =
-    use f = new DnsMxFactory(["gmail.com"], settings=FactorySettings(Async = true))
+    use f = new DnsMxFactory(["gmail.com"], settings=FactorySettings(Async = true, DnsIp="8.8.8.4"))
     f.Cancel()
     let r = f.Process()
-    Assert.NotNull r.Error
+    Assert.Null r.Error // use case specific
     let domainsArray = Array.ofSeq r.Domains
     Assert.Equal(1, domainsArray.Length)
     let d = domainsArray.[0]
